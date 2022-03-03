@@ -307,8 +307,12 @@ return at the end of a request.")
 	    (make-network-process :name "emms-mpd"
 				  :service emms-player-mpd-server-name
 				  :family 'local)))
-    (with-current-buffer (process-buffer emms-player-mpd-process)
-      (delete-region (point-min) (point-max)))
+    (when-let ((process-buf (process-buffer emms-player-mpd-process)))
+      (with-current-buffer process-buf
+        (if (string-match
+             (rx string-start "OK MPD " (zero-or-more (any num ".")) "\n" string-end)
+             (buffer-string))
+            (delete-region (point-min) (point-max)))))
     (set-process-sentinel emms-player-mpd-process
 			  #'emms-player-mpd-sentinel)
     (setq emms-player-mpd-queue
